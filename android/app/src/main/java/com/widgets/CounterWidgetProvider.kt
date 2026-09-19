@@ -139,6 +139,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             }
             CounterPlusTileService.requestAllTilesUpdate(context)
             CounterBridgeModule.notifyCountChanged(count)
+            CounterShortcutHelper.updateDynamicShortcuts(context)
         }
     }
 }

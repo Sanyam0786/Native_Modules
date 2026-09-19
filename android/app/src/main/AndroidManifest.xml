@@ -24,6 +24,15 @@
         </intent-filter>
       </activity>
 
+      <!-- Headless App Shortcut Action Handler -->
+      <activity
+        android:name=".ShortcutActionActivity"
+        android:exported="true"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar"
+        android:taskAffinity=""
+        android:excludeFromRecents="true"
+        android:noHistory="true" />
+
       <!-- Counter Box Widget -->
       <receiver
         android:name=".CounterWidgetProvider"
