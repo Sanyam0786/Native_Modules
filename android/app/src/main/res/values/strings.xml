@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Widgets</string>
+    <string name="counter_widget_name">Counter Box</string>
+    <string name="counter_widget_desc">Interactive Counter with live increase, decrease, and reset buttons</string>
+</resources>
