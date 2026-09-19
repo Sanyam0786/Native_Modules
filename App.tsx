@@ -167,6 +167,26 @@ function AppContent() {
             <Text style={styles.pinBtnText}>+ Add Widget to Home Screen</Text>
           </TouchableOpacity>
 
+          {/* Open Floating Bubble */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.bubbleBtn}
+            onPress={async () => {
+              const bridge = getCounterBridge();
+              console.log('[Bubble] bridge methods:', Object.keys(bridge || {}));
+              if (bridge?.showFloatingBubble) {
+                try {
+                  const res = await bridge.showFloatingBubble();
+                  console.log('[Bubble] showFloatingBubble result:', res);
+                } catch (e) {
+                  console.warn('Failed to open floating bubble:', e);
+                }
+              }
+            }}
+          >
+            <Text style={styles.bubbleBtnText}>💬 Open Floating Bubble</Text>
+          </TouchableOpacity>
+
         </View>
       </View>
     </View>
@@ -282,6 +302,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#3B82F6',
+  },
+  bubbleBtn: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  bubbleBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2563EB',
   },
 });
 

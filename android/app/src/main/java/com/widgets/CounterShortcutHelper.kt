@@ -12,10 +12,12 @@ object CounterShortcutHelper {
     const val ACTION_SHORTCUT_INCREMENT = "com.widgets.ACTION_SHORTCUT_INCREMENT"
     const val ACTION_SHORTCUT_DECREMENT = "com.widgets.ACTION_SHORTCUT_DECREMENT"
     const val ACTION_SHORTCUT_RESET = "com.widgets.ACTION_SHORTCUT_RESET"
+    const val ACTION_SHORTCUT_BUBBLE = "com.widgets.ACTION_SHORTCUT_BUBBLE"
 
     private const val ID_INCREMENT = "shortcut_increment"
     private const val ID_DECREMENT = "shortcut_decrement"
     private const val ID_RESET = "shortcut_reset"
+    private const val ID_BUBBLE = "shortcut_bubble"
 
     fun updateDynamicShortcuts(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return
@@ -56,7 +58,15 @@ object CounterShortcutHelper {
                 .setRank(3)
                 .build()
 
-            shortcutManager.dynamicShortcuts = listOf(incrementShortcut, decrementShortcut, resetShortcut)
+            val bubbleShortcut = ShortcutInfo.Builder(context, ID_BUBBLE)
+                .setShortLabel("Floating Bubble")
+                .setLongLabel("Open Floating Counter Bubble")
+                .setIcon(Icon.createWithResource(context, R.drawable.ic_shortcut_plus))
+                .setIntent(createIntent(ACTION_SHORTCUT_BUBBLE))
+                .setRank(4)
+                .build()
+
+            shortcutManager.dynamicShortcuts = listOf(incrementShortcut, decrementShortcut, resetShortcut, bubbleShortcut)
         } catch (e: Exception) {
             // Ignore exception if dynamic shortcuts are disabled or restricted
         }
@@ -83,6 +93,22 @@ object CounterShortcutHelper {
             ACTION_SHORTCUT_RESET -> {
                 editor.putInt(CounterWidgetProvider.KEY_COUNT, 0).apply()
                 CounterWidgetProvider.updateAllWidgets(context)
+                true
+            }
+            ACTION_SHORTCUT_BUBBLE -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    !android.provider.Settings.canDrawOverlays(context)
+                ) {
+                    val overlayIntent = Intent(
+                        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        android.net.Uri.parse("package:" + context.packageName)
+                    ).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    context.startActivity(overlayIntent)
+                } else {
+                    FloatingBubbleService.startService(context)
+                }
                 true
             }
             else -> false

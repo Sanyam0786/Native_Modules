@@ -104,6 +104,68 @@ class CounterBridgeModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun checkOverlayPermission(promise: Promise) {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                val canDraw = android.provider.Settings.canDrawOverlays(reactContext)
+                promise.resolve(canDraw)
+            } else {
+                promise.resolve(true)
+            }
+        } catch (e: Exception) {
+            promise.reject("CHECK_PERMISSION_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun requestOverlayPermission(promise: Promise) {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                if (!android.provider.Settings.canDrawOverlays(reactContext)) {
+                    val intent = android.content.Intent(
+                        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        android.net.Uri.parse("package:" + reactContext.packageName)
+                    ).apply {
+                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    reactContext.startActivity(intent)
+                    promise.resolve(false)
+                    return
+                }
+            }
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("REQUEST_PERMISSION_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun showFloatingBubble(promise: Promise) {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M &&
+                !android.provider.Settings.canDrawOverlays(reactContext)
+            ) {
+                requestOverlayPermission(promise)
+                return
+            }
+            FloatingBubbleService.startService(reactContext)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("SHOW_BUBBLE_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun hideFloatingBubble(promise: Promise) {
+        try {
+            FloatingBubbleService.stopService(reactContext)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("HIDE_BUBBLE_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
     fun addListener(eventName: String) {
         // Keep: Required for RN built-in Event Emitter Calls
     }
