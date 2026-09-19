@@ -129,6 +129,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
         }
 
         fun updateAllWidgets(context: Context) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val count = prefs.getInt(KEY_COUNT, 0)
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val componentName = ComponentName(context, CounterWidgetProvider::class.java)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
@@ -136,6 +138,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 updateAppWidget(context, appWidgetManager, appWidgetId)
             }
             CounterPlusTileService.requestAllTilesUpdate(context)
+            CounterBridgeModule.notifyCountChanged(count)
         }
     }
 }

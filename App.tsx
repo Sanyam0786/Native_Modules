@@ -7,6 +7,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   AppState,
+  DeviceEventEmitter,
   NativeModules,
   StatusBar,
   StyleSheet,
@@ -18,8 +19,16 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import NativeCounterBridge from './src/specs/NativeCounterBridge';
+import { TurboModuleRegistry } from 'react-native';
 
-const { CounterBridge } = NativeModules;
+const getCounterBridge = () => {
+  return (
+    NativeModules.CounterBridge ||
+    TurboModuleRegistry.get('CounterBridge') ||
+    NativeCounterBridge
+  );
+};
 
 function AppContent() {
   const insets = useSafeAreaInsets();
@@ -27,14 +36,15 @@ function AppContent() {
 
   // Sync count from widget / native shared preferences
   const fetchNativeCount = useCallback(async () => {
-    if (CounterBridge?.getCount) {
+    const bridge = getCounterBridge();
+    if (bridge?.getCount) {
       try {
-        const val = await CounterBridge.getCount();
+        const val = await bridge.getCount();
         if (typeof val === 'number') {
           setCount(val);
         }
       } catch (e) {
-        console.warn('Failed to get count from CounterBridge:', e);
+        console.warn('[TurboModule] Failed to get count:', e);
       }
     }
   }, []);
@@ -42,24 +52,38 @@ function AppContent() {
   // Update native widget state whenever count changes from user interaction
   const updateNativeCount = (newCount: number) => {
     setCount(newCount);
-    if (CounterBridge?.setCount) {
-      CounterBridge.setCount(newCount).catch((e: any) =>
-        console.warn('Failed to set count in CounterBridge:', e)
-      );
+    const bridge = getCounterBridge();
+    if (bridge?.setCount) {
+      bridge.setCount(newCount)
+        .catch((e: any) =>
+          console.warn('[TurboModule] Failed to set count:', e)
+        );
     }
   };
 
   useEffect(() => {
     fetchNativeCount();
 
-    const subscription = AppState.addEventListener('change', nextAppState => {
+    // Listen to real-time count change events from TileService, Widget, or Background
+    const countEventSubscription = DeviceEventEmitter.addListener(
+      'onCountChanged',
+      (data: { count?: number }) => {
+        console.log('[RealTime Sync] onCountChanged received:', data?.count);
+        if (data && typeof data.count === 'number') {
+          setCount(data.count);
+        }
+      }
+    );
+
+    const appStateSubscription = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'active') {
         fetchNativeCount();
       }
     });
 
     return () => {
-      subscription.remove();
+      countEventSubscription.remove();
+      appStateSubscription.remove();
     };
   }, [fetchNativeCount]);
 
@@ -133,10 +157,16 @@ function AppContent() {
           <TouchableOpacity
             activeOpacity={0.7}
             style={styles.pinBtn}
-            onPress={() => CounterBridge?.pinWidget && CounterBridge.pinWidget()}
+            onPress={() => {
+              const bridge = getCounterBridge();
+              if (bridge?.pinWidget) {
+                bridge.pinWidget();
+              }
+            }}
           >
             <Text style={styles.pinBtnText}>+ Add Widget to Home Screen</Text>
           </TouchableOpacity>
+
         </View>
       </View>
     </View>
