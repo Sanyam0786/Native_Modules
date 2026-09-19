@@ -135,7 +135,9 @@ class CounterWidgetProvider : AppWidgetProvider() {
             for (appWidgetId in appWidgetIds) {
                 updateAppWidget(context, appWidgetManager, appWidgetId)
             }
+            CounterPlusTileService.requestAllTilesUpdate(context)
         }
     }
 }
+
 

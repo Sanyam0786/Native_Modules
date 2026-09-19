@@ -39,5 +39,30 @@
             android:name="android.appwidget.provider"
             android:resource="@xml/counter_widget_info" />
       </receiver>
+
+      <!-- Quick Settings Tiles for Plus and Minus -->
+      <service
+
+        android:name=".CounterPlusTileService"
+        android:label="@string/tile_plus_label"
+        android:icon="@drawable/ic_tile_plus"
+        android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.service.quicksettings.action.QS_TILE" />
+        </intent-filter>
+      </service>
+
+      <service
+        android:name=".CounterMinusTileService"
+        android:label="@string/tile_minus_label"
+        android:icon="@drawable/ic_tile_minus"
+        android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.service.quicksettings.action.QS_TILE" />
+        </intent-filter>
+      </service>
     </application>
 </manifest>
+
